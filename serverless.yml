@@ -1,0 +1,28 @@
+service: aws-node-project
+frameworkVersion: '3'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-plugin-chrome
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 128
+  timeout: 3
+
+functions:
+  index:
+    handler: index.handler
+    description: My first lambda example
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+	
+package:
+  exclude:
+    - node_modules/puppeteer/.local-chromium/**
