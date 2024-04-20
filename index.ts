@@ -45,11 +45,13 @@ module.exports.scraper = async (event: any) => {
       const title = $('div.p13n-sc-truncate-desktop-type2').text();
       const price = $('span._cDEzb_p13n-sc-price_3mJ9Z').text();
       const urlImg = $('img').attr('src');
+      const rating = $('span.a-icon-alt').text();
 
       const product = {
         title: title.trim(),
         price: price.trim(),
-        urlImg: urlImg.trim()
+        urlImg: urlImg.trim(),
+        rating: rating.trim()
       };
 
       products.push(product);
@@ -71,7 +73,7 @@ module.exports.scraper = async (event: any) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        products: 'ok'
+        products
       }),
     };
   } catch (error: any) {
