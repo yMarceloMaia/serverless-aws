@@ -3,26 +3,21 @@ frameworkVersion: '3'
 
 plugins:
   - serverless-plugin-typescript
-  - serverless-plugin-chrome
 
 provider:
   name: aws
   runtime: nodejs20.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  memorySize: 128
-  timeout: 3
+  memorySize: 512
+  timeout: 30
 
 functions:
-  index:
-    handler: index.handler
-    description: My first lambda example
+  scraper:
+    handler: index.scraper
+    description: Scraper function to extract data from Amazon
     events:
       - http:
-          path: /
+          path: /scraper
           method: get
           cors: true
-	
-package:
-  exclude:
-    - node_modules/puppeteer/.local-chromium/**
