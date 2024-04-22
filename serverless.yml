@@ -9,7 +9,7 @@ provider:
   runtime: nodejs20.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  memorySize: 512
+  memorySize: 1024
   timeout: 60
 
 functions:
@@ -21,3 +21,19 @@ functions:
           path: /scraper
           method: get
           cors: true
+
+resources:
+  Resources:
+    ProdutosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Produtos
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5

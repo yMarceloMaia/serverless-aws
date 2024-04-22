@@ -1,8 +1,31 @@
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { waitForTableCreation } from './functions';
+const AWS = require('aws-sdk');
+
 const puppeteer = require('puppeteer-core')
 const chromium = require('@sparticuz/chromium');
 const cheerio = require('cheerio');
 
 const url = "https://www.amazon.com.br/bestsellers)"
+const TABLE_NAME = "Products"
+
+const dynamoDB: DocumentClient = new AWS.DynamoDB.DocumentClient()
+const dynamo = new AWS.DynamoDB()
+
+// Parâmetros para criação de tabela no dynamoDB
+const params = {
+  TableName: TABLE_NAME,
+  KeySchema: [
+    { AttributeName: 'id', KeyType: 'HASH' }
+  ],
+  AttributeDefinitions: [
+    { AttributeName: 'id', AttributeType: 'S' }
+  ],
+  ProvisionedThroughput: {
+    ReadCapacityUnits: 5,
+    WriteCapacityUnits: 5
+  }
+};
 
 module.exports.scraper = async (event: any) => {
   try {
@@ -16,20 +39,6 @@ module.exports.scraper = async (event: any) => {
 
     const page = await browser.newPage();
     await page.goto(url);
-
-    const html = await page.content();
-    // const bodyHTML = await page.$eval('body', (body: { innerHTML: any; }) => body.innerHTML);
-    // const bodyHTML = await page.evaluate(() => document.getElementById('zg_left_col1')?.innerHTML);
-    // const pageTitle = await page.title();
-
-    // const products = await page.evaluate((body: any) => {
-    //   const productsPage = document.getElementById('zg_left_col1')
-
-    //   return productsPage?.innerHTML
-    // })
-    // console.log('=================')
-    // console.log(products)
-    // console.log('=================')
 
     const productsHtml = await page.$$eval('.a-carousel', (items: any[]) => {
       return items.map(item => {
@@ -48,6 +57,7 @@ module.exports.scraper = async (event: any) => {
       const rating = $('span.a-icon-alt').text();
 
       const product = {
+        id: Date.now().toString(),
         title: title.trim(),
         price: price.trim(),
         urlImg: urlImg.trim(),
@@ -57,23 +67,38 @@ module.exports.scraper = async (event: any) => {
       products.push(product);
     });
 
-
-    console.log(products);
-
-    // const $ = cheerio.load(bodyHTML);
-
-    // Use os seletores do Cheerio para extrair informações específicas
-    // const pageTitle = $('title').text();
-
-    // console.log(pageTitle);
-    // console.log(bodyHTML);
-
     await browser.close();
+
+    const paramsTable = {
+      TableName: TABLE_NAME,
+    };
+
+    try {
+      const already = await waitForTableCreation(dynamo, params, paramsTable);
+
+      if (already) {
+        const insertPromises = products.map((product: any) => {
+          const paramsInsert = {
+            TableName: 'Products',
+            Item: product
+          };
+
+          return dynamoDB.put(paramsInsert).promise();
+        });
+
+        await Promise.all(insertPromises);
+
+        console.log("Todos os produtos foram inseridos com sucesso no DynamoDB");
+      }
+    } catch (error) {
+      console.error("Erro ao inserir produtos no DynamoDB:", error);
+      throw new Error("Erro ao inserir produtos no DynamoDB");
+    }
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        products
+        message: `${products.length > 0 ? 'web scraper done successfully' : 'web scraper done failed'}`
       }),
     };
   } catch (error: any) {
@@ -85,3 +110,4 @@ module.exports.scraper = async (event: any) => {
     };
   }
 };
+
