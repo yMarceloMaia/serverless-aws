@@ -1,5 +1,7 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { DeleteItemOutput, DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { waitForTableCreation } from './functions';
+import { PromiseResult } from 'aws-sdk/lib/request';
+import { AWSError } from 'aws-sdk';
 const AWS = require('aws-sdk');
 
 const puppeteer = require('puppeteer-core')
@@ -11,6 +13,14 @@ const TABLE_NAME = "Products"
 
 const dynamoDB: DocumentClient = new AWS.DynamoDB.DocumentClient()
 const dynamo = new AWS.DynamoDB()
+
+interface Product {
+  id: string;
+  title: string;
+  price: string;
+  urlImg: string;
+  rating: string;
+}
 
 // Parâmetros para criação de tabela no dynamoDB
 const params = {
@@ -47,9 +57,9 @@ module.exports.scraper = async (event: any) => {
       });
     });
 
-    const products: any = [];
+    const products: Product[] = [];
 
-    productsHtml.forEach((item: any) => {
+    productsHtml.forEach((item: string) => {
       const $ = cheerio.load(item);
       const title = $('div.p13n-sc-truncate-desktop-type2').text();
       const price = $('span._cDEzb_p13n-sc-price_3mJ9Z').text();
@@ -77,7 +87,24 @@ module.exports.scraper = async (event: any) => {
       const already = await waitForTableCreation(dynamo, params, paramsTable);
 
       if (already) {
-        const insertPromises = products.map((product: any) => {
+        const { Items } = await dynamoDB.scan({ TableName: TABLE_NAME }).promise();
+
+        if (Items) {
+          const deletePromisesPromise: Promise<PromiseResult<DeleteItemOutput, AWSError>>[] = Items.map(async (item: DocumentClient.AttributeMap) => {
+            const paramsDelete = {
+              TableName: TABLE_NAME,
+              Key: {
+                id: item.id
+              }
+            };
+
+            return dynamoDB.delete(paramsDelete).promise();
+          });
+
+          await Promise.all(deletePromisesPromise);
+        }
+
+        const insertPromises: Promise<DocumentClient.PutItemOutput>[] = products.map(async (product: Product) => {
           const paramsInsert = {
             TableName: 'Products',
             Item: product
@@ -87,7 +114,6 @@ module.exports.scraper = async (event: any) => {
         });
 
         await Promise.all(insertPromises);
-
         console.log("Todos os produtos foram inseridos com sucesso no DynamoDB");
       }
     } catch (error) {
@@ -98,7 +124,7 @@ module.exports.scraper = async (event: any) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: `${products.length > 0 ? 'web scraper done successfully' : 'web scraper done failed'}`
+        message: 'web scraper done successfully'
       }),
     };
   } catch (error: any) {
