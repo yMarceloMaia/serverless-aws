@@ -10,7 +10,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
   memorySize: 1024
-  timeout: 60
+  timeout: 30
 
 functions:
   scraper:
@@ -20,6 +20,36 @@ functions:
       - http:
           path: /scraper
           method: get
+          cors: true
+
+  getAllProducts:
+    handler: get.getAllProducts
+    description: Get all products from DynamoDB
+    events:
+      - http:
+          path: /products
+          method: get
+          cors: true
+
+  getProductById:
+    handler: get.getProductById
+    description: Get product by ID from DynamoDB
+    events:
+      - http:
+          path: /products/{productId}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                productId: true
+
+  deleteProductsFromDynamoDB:
+    handler: delete.deleteAllProducts
+    events:
+      - http:
+          path: /delete-products
+          method: delete
           cors: true
 
 resources:
