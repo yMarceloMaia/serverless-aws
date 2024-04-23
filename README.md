@@ -1,3 +1,30 @@
+# Web Scraper e CRUD com DynamoDB
+
+Este projeto consiste em um web scraper desenvolvido em Node.js utilizando Puppeteer e Cheerio para extrair dados da página de produtos mais vendidos da amazon e armazená-los no banco de dados DynamoDB na AWS. Além disso, o projeto inclui endpoints HTTP para realizar operações CRUD (Create, Read, Update, Delete) nos dados armazenados no DynamoDB com a utilização da API Gateway.
+
+## Tecnologias Utilizadas
+
+- **Node.js**: Plataforma de execução de código JavaScript.
+- **Puppeteer**: Biblioteca Node.js para automação de navegação em páginas da web.
+- **Cheerio**: Biblioteca Node.js para análise e manipulação de dados HTML.
+- **AWS DynamoDB**: Banco de dados NoSQL totalmente gerenciado pela AWS.
+- **Serverless Framework**: Framework para desenvolvimento e implantação de aplicativos sem servidor.
+- **API Gateway**: Serviço para ser possivel a utilização de endpoints HTTP
+
+## Funcionalidades Principais
+
+1. **Web Scraper**: Extrai dados de uma página da web (por exemplo, produtos mais vendidos em um site de comércio eletrônico) usando Puppeteer e Cheerio.
+2. **Armazenamento no DynamoDB**: Armazena os dados extraídos no DynamoDB para persistência.
+3. **Operações CRUD**: Fornece endpoints HTTP para criar, ler, atualizar e excluir dados armazenados no DynamoDB.
+4. **Implantação sem servidor**: Usa o Serverless Framework para implantar o aplicativo na AWS de forma simples e eficiente.
+
+## Como Usar
+
+1. **Instalação**: Clone este repositório e instale as dependências do Node.js usando `npm install`.
+2. **Configuração AWS**: Configure suas credenciais AWS no ambiente local para permitir a comunicação com o DynamoDB.
+3. **Implantação**: Use o Serverless Framework para implantar o aplicativo na AWS com `serverless deploy`.
+4. **Utilização**: Use os endpoints HTTP fornecidos para acessar as funcionalidades do aplicativo, como execução do web scraper e operações CRUD no DynamoDB.
+
 # Documentação da API
 
 ## Descrição
